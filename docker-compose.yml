@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  valkey:
+    image: valkey/valkey
+    container_name: valkey-server
+    ports:
+      - "10.10.8.30:6379:6379"  # Bind to VPN interface
+    command: valkey-server --bind 0.0.0.0 --protected-mode no
+    volumes:
+      - valkey-data:/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant-server
+    ports:
+      - "10.10.8.30:6333:6333"  # Bind to VPN interface (REST API)
+      - "10.10.8.30:6334:6334"  # Bind to VPN interface (gRPC)
+    volumes:
+      - qdrant-data:/qdrant/storage
+    restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+
+volumes:
+  valkey-data:
+  qdrant-data:
+
+networks:
+  app-network:
+    driver: bridge
